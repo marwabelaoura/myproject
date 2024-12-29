@@ -171,3 +171,61 @@ int isUniqueUsername(const char *username) {
     fclose(file);
     return 1;
 }
+void addBook() {
+    FILE *file = fopen(booksFile, "a");
+
+    if (file == NULL) {
+        printf("Error: Could not open books file.\n");
+        return;
+    }
+
+    Book newBook;
+    newBook.id = generateBookID();
+
+    printf("Enter book title: ");
+    scanf(" %[^\n]", newBook.title);
+    printf("Enter book author: ");
+    scanf(" %[^\n]", newBook.author);
+    printf("Enter book price: ");
+    scanf("%f", &newBook.price);
+    printf("Enter book quantity: ");
+    scanf("%d", &newBook.quantity);
+
+    fprintf(file, "%d,%s,%s,%.2f,%d\n", newBook.id, newBook.title, newBook.author, newBook.price, newBook.quantity);
+    fclose(file);
+
+    printf("Book added successfully with ID %d.\n", newBook.id);
+}
+
+void viewBooks() {
+    FILE *file = fopen(booksFile, "r");
+    Book book;
+
+    if (file == NULL) {
+        printf("Error: Could not open books file.\n");
+        return;
+    }
+
+    printf("\n===== Available Books =====\n");
+    while (fscanf(file, "%d,%[^,],%[^,],%f,%d", &book.id, book.title, book.author, &book.price, &book.quantity) != EOF) {
+        printf("ID: %d | Title: %s | Author: %s | Price: %.2f | Quantity: %d\n",
+               book.id, book.title, book.author, book.price, book.quantity);
+    }
+
+    fclose(file);
+}
+
+int generateBookID() {
+    FILE *file = fopen(booksFile, "r");
+    int id = 0;
+    Book book;
+
+    if (file != NULL) {
+        while (fscanf(file, "%d,%[^,],%[^,],%f,%d", &book.id, book.title, book.author, &book.price, &book.quantity) != EOF) {
+            if (book.id > id) id = book.id;
+        }
+        fclose(file);
+    }
+
+    return id + 1;
+}
