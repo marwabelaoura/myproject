@@ -171,6 +171,7 @@ int isUniqueUsername(const char *username) {
     fclose(file);
     return 1;
 }
+//Razans part 
 void addBook() {
     FILE *file = fopen(booksFile, "a");
 
