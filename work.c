@@ -1,1 +1,173 @@
-//start program here
+//part widad
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_USERNAME 50
+#define MAX_PASSWORD 50
+#define MAX_ROLE 10
+#define MAX_TITLE 100
+#define MAX_AUTHOR 100
+#define MAX_BOOKS 100
+
+typedef struct {
+    int id;
+    char title[MAX_TITLE];
+    char author[MAX_AUTHOR];
+    float price;
+    int quantity;
+} Book;
+
+typedef struct {
+    char username[MAX_USERNAME];
+    char password[MAX_PASSWORD];
+    char role[MAX_ROLE]; // "Admin" or "Member"
+} User;
+
+const char *usersFile = "users.txt";
+const char *booksFile = "books.txt";
+
+// Function Prototypes
+void registerUser();
+int loginUser(User *loggedInUser);
+void addBook();
+void viewBooks();
+void updateBook();
+void deleteBook();
+void borrowBook(const char *username);
+
+// Helper Functions
+int isUniqueUsername(const char *username);
+int generateBookID();
+
+// Main Function
+int main() {
+    User loggedInUser;
+    int choice;
+
+    printf("===== Library Management System =====\n");
+    printf("1. Register\n2. Login\n3. Exit\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            registerUser();
+            break;
+        case 2:
+            if (loginUser(&loggedInUser)) {
+                if (strcmp(loggedInUser.role, "Admin") == 0) {
+                    do {
+                        printf("\n===== Admin Menu =====\n");
+                        printf("1. Add Book\n2. View Books\n3. Update Book\n4. Delete Book\n5. Logout\n");
+                        printf("Enter your choice: ");
+                        scanf("%d", &choice);
+
+                        switch (choice) {
+                            case 1: addBook(); break;
+                            case 2: viewBooks(); break;
+                            case 3: updateBook(); break;
+                            case 4: deleteBook(); break;
+                            case 5: printf("Logging out...\n"); break;
+                            default: printf("Invalid choice.\n");
+                        }
+                    } while (choice != 5);
+                } else {
+                    do {
+                        printf("\n===== Member Menu =====\n");
+                        printf("1. View Books\n2. Borrow Book\n3. Logout\n");
+                        printf("Enter your choice: ");
+                        scanf("%d", &choice);
+
+                        switch (choice) {
+                            case 1: viewBooks(); break;
+                            case 2: borrowBook(loggedInUser.username); break;
+                            case 3: printf("Logging out...\n"); break;
+                            default: printf("Invalid choice.\n");
+                        }
+                    } while (choice != 3);
+                }
+            }
+            break;
+        case 3:
+            printf("Exiting system...\n");
+            exit(0);
+        default:
+            printf("Invalid choice.\n");
+    }
+
+    return 0;
+}
+
+void registerUser() {
+    User newUser;
+    FILE *file = fopen(usersFile, "a");
+
+    if (file == NULL) {
+        printf("Error: Could not open users file.\n");
+        return;
+    }
+
+    printf("Enter username: ");
+    scanf("%s", newUser.username);
+
+    if (!isUniqueUsername(newUser.username)) {
+        printf("Error: Username already exists.\n");
+        fclose(file);
+        return;
+    }
+
+    printf("Enter password: ");
+    scanf("%s", newUser.password);
+    printf("Enter role (Admin/Member): ");
+    scanf("%s", newUser.role);
+
+    fprintf(file, "%s %s %s\n", newUser.username, newUser.password, newUser.role);
+    fclose(file);
+
+    printf("Registration successful.\n");
+}
+
+int loginUser(User *loggedInUser) {
+    char username[MAX_USERNAME], password[MAX_PASSWORD];
+    FILE *file = fopen(usersFile, "r");
+
+    if (file == NULL) {
+        printf("Error: Could not open users file.\n");
+        return 0;
+    }
+
+    printf("Enter username: ");
+    scanf("%s", username);
+    printf("Enter password: ");
+    scanf("%s", password);
+
+    while (fscanf(file, "%s %s %s", loggedInUser->username, loggedInUser->password, loggedInUser->role) != EOF) {
+        if (strcmp(loggedInUser->username, username) == 0 && strcmp(loggedInUser->password, password) == 0) {
+            printf("Login successful.\n");
+            fclose(file);
+            return 1;
+        }
+    }
+
+    printf("Error: Invalid username or password.\n");
+    fclose(file);
+    return 0;
+}
+
+int isUniqueUsername(const char *username) {
+    FILE *file = fopen(usersFile, "r");
+    User tempUser;
+
+    if (file == NULL) return 1; // No file means no users yet
+
+    while (fscanf(file, "%s %s %s", tempUser.username, tempUser.password, tempUser.role) != EOF) {
+        if (strcmp(tempUser.username, username) == 0) {
+            fclose(file);
+            return 0;
+        }
+    }
+
+    fclose(file);
+    return 1;
+}
