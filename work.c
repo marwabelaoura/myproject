@@ -229,3 +229,136 @@ int generateBookID() {
 
     return id + 1;
 }
+
+//marwa s part 
+
+void updateBook() {
+    int bookID, found = 0;
+    Book book;
+    FILE *file = fopen(booksFile, "r");
+    FILE *temp = fopen("temp.txt", "w");
+
+    if (file == NULL || temp == NULL) {
+        printf("Error: Could not open books file.\n");
+        return;
+    }
+
+    printf("Enter the ID of the book to update: ");
+    scanf("%d", &bookID);
+
+    while (fscanf(file, "%d,%[^,],%[^,],%f,%d", &book.id, book.title, book.author, &book.price, &book.quantity) != EOF) {
+        if (book.id == bookID) {
+            found = 1;
+
+            printf("Enter new title (current: %s): ", book.title);
+            scanf(" %[^\n]", book.title);
+
+            printf("Enter new author (current: %s): ", book.author);
+            scanf(" %[^\n]", book.author);
+
+            printf("Enter new price (current: %.2f): ", book.price);
+            scanf("%f", &book.price);
+
+            printf("Enter new quantity (current: %d): ", book.quantity);
+            scanf("%d", &book.quantity);
+        }
+
+        fprintf(temp, "%d,%s,%s,%.2f,%d\n", book.id, book.title, book.author, book.price, book.quantity);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (found) {
+        remove(booksFile);
+        rename("temp.txt", booksFile);
+        printf("Book updated successfully.\n");
+    } else {
+        remove("temp.txt");
+        printf("Error: Book with ID %d not found.\n", bookID);
+    }
+}
+
+void deleteBook() {
+    int bookID, found = 0;
+    Book book;
+    FILE *file = fopen(booksFile, "r");
+    FILE *temp = fopen("temp.txt", "w");
+
+    if (file == NULL || temp == NULL) {
+        printf("Error: Could not open books file.\n");
+        return;
+    }
+
+    printf("Enter the ID of the book to delete: ");
+    scanf("%d", &bookID);
+
+    while (fscanf(file, "%d,%[^,],%[^,],%f,%d", &book.id, book.title, book.author, &book.price, &book.quantity) != EOF) {
+        if (book.id == bookID) {
+            found = 1;
+        } else {
+            fprintf(temp, "%d,%s,%s,%.2f,%d\n", book.id, book.title, book.author, book.price, book.quantity);
+        }
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (found) {
+        remove(booksFile);
+        rename("temp.txt", booksFile);
+        printf("Book deleted successfully.\n");
+    } else {
+        remove("temp.txt");
+        printf("Error: Book with ID %d not found.\n", bookID);
+    }
+}
+
+void borrowBook(const char *username) {
+    int id, quantity, found = 0;
+    const int MAX_BORROW_QUANTITY = 4; // Limite maximale par emprunt
+    Book book;
+    FILE *file = fopen(booksFile, "r");
+    FILE *temp = fopen("temp.txt", "w");
+
+    if (file == NULL || temp == NULL) {
+        printf("Error: Could not open books file.\n");
+        return;
+    }
+
+    printf("Enter the ID of the book to borrow: ");
+    scanf("%d", &id);
+
+    while (fscanf(file, "%d,%[^,],%[^,],%f,%d", &book.id, book.title, book.author, &book.price, &book.quantity) != EOF) {
+        if (book.id == id) {
+            found = 1;
+
+            printf("Enter the quantity to borrow (max %d, available: %d): ", MAX_BORROW_QUANTITY, book.quantity);
+            scanf("%d", &quantity);
+
+            if (quantity > 0 && quantity <= MAX_BORROW_QUANTITY && quantity <= book.quantity) {
+                book.quantity -= quantity;
+                printf("You have successfully borrowed %d copies of '%s'.\n", quantity, book.title);
+            } else if (quantity > MAX_BORROW_QUANTITY) {
+                printf("Error: You can only borrow up to %d copies at a time.\n", MAX_BORROW_QUANTITY);
+            } else if (quantity > book.quantity) {
+                printf("Error: Insufficient stock for '%s'. Only %d available.\n", book.title, book.quantity);
+            } else {
+                printf("Error: Invalid quantity.\n");
+            }
+        }
+
+        fprintf(temp, "%d,%s,%s,%.2f,%d\n", book.id, book.title, book.author, book.price, book.quantity);
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    if (found) {
+        remove(booksFile);
+        rename("temp.txt", booksFile);
+    } else {
+        remove("temp.txt");
+        printf("Error: Book with ID %d not found.\n", id);
+    }
+}
